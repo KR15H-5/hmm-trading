@@ -20,15 +20,15 @@ from agents.market_maker  import MarketMakerAgent
 
 REGIME_SCHEDULES = {
     'trending': {
-        'supply': (82, 100), 'demand': (95, 120),
-        'stepmode': 'jittered', 'drift': 0.4,
+        'supply': (85, 100), 'demand': (100, 130),
+        'stepmode': 'jittered', 'drift': 1.5,
     },
     'mean_reverting': {
         'supply': (80, 100), 'demand': (100, 120),
         'stepmode': 'jittered', 'drift': 0.0,
     },
     'volatile': {
-        'supply': (60, 100), 'demand': (100, 140),
+        'supply': (20, 100), 'demand': (100, 180),
         'stepmode': 'random', 'drift': 0.0,
     },
 }
@@ -167,7 +167,7 @@ class Coordinator:
     """
 
     def __init__(self, n_sessions=100, mean_duration=10, std_duration=3,
-                 session_length=60.0, n_buyers=10, seed=42,
+                 session_length=300.0, n_buyers=10, seed=42,
                  enable_meta=True, enable_risk=True, hmm_warmup=21):
 
         self.n_sessions     = n_sessions
