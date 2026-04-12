@@ -370,4 +370,4 @@ def run_experiments(n_runs=N_RUNS, n_workers=4, output_dir='results'):
 
 
 if __name__ == '__main__':
-    run_experiments(n_runs=3, n_workers=2, output_dir='results')
+    run_experiments(n_runs=N_RUNS, n_workers=4, output_dir='results')
