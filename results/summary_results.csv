@@ -1,0 +1,9 @@
+condition,speed,meta,n_trials,accuracy_mean,accuracy_std,accuracy_ci95,pnl_mean,pnl_std,pnl_ci95,sharpe_mean,sharpe_std,detection_lag_mean,detection_lag_std,vetoes_mean,retrains_mean
+slow_meta,slow,True,3,0.3291,0.122,0.1381,1290.67,98.07,110.97,0.1812,0.0216,3.33,1.04,63.67,11.33
+fast_nometa,fast,False,3,0.5823,0.0438,0.0496,807.33,223.01,252.36,0.15,0.0185,1.44,0.28,46.0,0.0
+medium_meta,medium,True,3,0.3882,0.1573,0.1779,934.67,334.5,378.52,0.1446,0.0337,2.68,0.94,60.0,11.33
+slow_nometa,slow,False,3,0.7173,0.0916,0.1036,635.33,40.41,45.73,0.1388,0.0228,1.92,0.76,66.67,0.0
+medium_nometa,medium,False,3,0.6245,0.0073,0.0082,586.0,111.3,125.95,0.1334,0.0198,1.5,0.07,62.0,0.0
+very_fast_meta,very_fast,True,3,0.4515,0.1905,0.2155,944.67,422.97,478.64,0.1579,0.0215,1.27,0.09,59.0,10.0
+very_fast_nometa,very_fast,False,3,0.5401,0.0649,0.0735,1103.33,141.77,160.42,0.1718,0.0119,1.27,0.01,58.67,0.0
+fast_meta,fast,True,3,0.5274,0.1845,0.2088,855.33,501.02,566.95,0.1521,0.0499,1.38,0.27,63.0,8.0
