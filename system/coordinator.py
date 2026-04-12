@@ -188,8 +188,8 @@ class Coordinator:
         self.meta = MetaLearner(
             detector          = self.detector,
             error_window      = 15,
-            retrain_threshold = 0.35,
-            cooldown          = 5,
+            retrain_threshold = 0.6,
+            cooldown          = 10,
             retrain_window    = 40,
             enabled           = enable_meta,
         )
