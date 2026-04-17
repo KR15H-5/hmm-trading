@@ -50,21 +50,20 @@ def _build_schedule(regime, start_time, end_time, drift_offset=0.0):
     mid   = (start_time + end_time) / 2.0
 
     if regime == 'trending':
-        # split session into two halves with a 15-unit price shift
-        # this creates genuine within-session momentum visible to HMM
+        # split session: second half has higher prices to create momentum signal
         shift = 15
         supply = [
             {'from': start_time, 'to': mid,
              'ranges': [(s_lo, s_hi)], 'stepmode': sched['stepmode']},
             {'from': mid, 'to': end_time,
-             'ranges': [(min(499, s_lo + shift), min(500, s_hi + shift))],
+             'ranges': [(min(499, s_lo+shift), min(500, s_hi+shift))],
              'stepmode': sched['stepmode']},
         ]
         demand = [
             {'from': start_time, 'to': mid,
              'ranges': [(d_lo, d_hi)], 'stepmode': sched['stepmode']},
             {'from': mid, 'to': end_time,
-             'ranges': [(min(499, d_lo + shift), min(500, d_hi + shift))],
+             'ranges': [(min(499, d_lo+shift), min(500, d_hi+shift))],
              'stepmode': sched['stepmode']},
         ]
     else:
@@ -98,6 +97,7 @@ def _run_bse_session(true_regime, session_idx, active_agent,
         'sup': sup, 'dem': dem,
         'interval': 5.0, 'timemode': 'drip-fixed',
     }
+
     if active_agent is not None and active_agent.active:
         proptraders = [(agent_type, 1, {'agent_object': active_agent})]
     else:
@@ -165,24 +165,23 @@ class Coordinator:
 
     TWO-PHASE DESIGN
     ----------------
-    Phase 1 — Warmup:
-        Run background-only sessions with a BALANCED regime sequence
-        (equal sessions of each regime) so HMM always gets good training data.
-        No agents. No risk manager. Risk manager only activates after warmup.
+    Phase 1 — Warmup (hmm_warmup sessions):
+        Balanced regime sequence, background traders only.
+        No agents. No risk manager. HMM trains once at end.
 
     Phase 2 — Live trading:
-        Use HMM predictions to activate the right agent each session.
-        Risk manager can veto if conditions are unsafe.
-        Meta-learner monitors accuracy and retrains when needed.
-        HMM only updated from vetoed sessions to prevent agent
-        price impact corrupting training data.
+        HMM predicts regime → right agent activated.
+        Risk manager can veto. Meta-learner monitors.
 
-    KEY DESIGN DECISIONS
-    --------------------
-    1. Balanced warmup sequence — prevents all-one-regime training
-    2. Risk manager disabled during warmup — prevents premature vetoes
-    3. Switcher reset after warmup — live trading starts fresh
-    4. HMM only learns from clean (no-agent) sessions
+    ENHANCED TRACKING (Fix 1, 2, 5)
+    --------------------------------
+    Records per-session:
+        - is_transition: whether regime changed this session
+        - transition_from/to: which pair of regimes switched
+        - hmm_confidence: HMM posterior probability
+        - session_pnl_correct: PnL earned when HMM was correct
+        - session_pnl_incorrect: PnL earned when HMM was wrong
+        - per_regime_correct: accuracy broken down by regime
     """
 
     def __init__(self, n_sessions=100, mean_duration=10, std_duration=3,
@@ -193,10 +192,8 @@ class Coordinator:
         self.session_length = session_length
         self.n_buyers       = n_buyers
         self.seed           = seed
-        # round warmup to nearest multiple of 3 for balanced coverage
         self.hmm_warmup     = max(3, (hmm_warmup // 3) * 3)
 
-        # store switcher params so we can reset after warmup
         self.switcher_mean  = mean_duration
         self.switcher_std   = std_duration
         self.switcher       = RegimeSwitcher(mean_duration, std_duration, seed)
@@ -207,14 +204,18 @@ class Coordinator:
         self.meta = MetaLearner(
             detector          = self.detector,
             error_window      = 15,
-            retrain_threshold = 0.6,
+            retrain_threshold = 0.60,
             cooldown          = 10,
             retrain_window    = 40,
             enabled           = enable_meta,
         )
+
+        # FIX 3: raised volatility threshold from 0.08 to 0.15
+        # previous value was blocking 60-65% of all sessions
+        # agents were barely trading — defeating the purpose of the system
         self.risk = RiskManager(
             confidence_threshold = 0.45,
-            volatility_threshold = 0.08,
+            volatility_threshold = 0.15,
             max_drawdown         = -200.0,
             cooldown             = 3,
             enabled              = enable_risk,
@@ -243,7 +244,6 @@ class Coordinator:
         self.drift_offset = 0.0
         self.results      = []
 
-        # balanced warmup sequence: equal sessions per regime, shuffled
         sessions_per_regime   = self.hmm_warmup // 3
         warmup_seq            = REGIMES * sessions_per_regime
         rng_warmup            = random.Random(seed + 1)
@@ -262,7 +262,6 @@ class Coordinator:
         return sum(agent.pnl for agent in self.agents.values())
 
     def _last_live_volatility(self):
-        """Volatility from last live (post-warmup) session."""
         live = [r for r in self.results if r['veto_reason'] != 'warmup']
         if not live:
             return 0.0
@@ -273,6 +272,7 @@ class Coordinator:
         prev_total_pnl   = 0.0
         predicted_regime = 'mean_reverting'
         confidence       = 1 / 3
+        prev_true_regime = None  # FIX 1: track transitions
 
         for session_idx in range(self.n_sessions):
 
@@ -280,7 +280,6 @@ class Coordinator:
             in_warmup = session_idx < self.hmm_warmup
 
             if in_warmup:
-                # use balanced sequence — guaranteed equal regime coverage
                 warmup_regime = self._warmup_sequence[session_idx]
 
                 if warmup_regime == 'trending':
@@ -302,48 +301,53 @@ class Coordinator:
 
                 self.detector.add_observation(features)
 
-                # train exactly once at end of warmup
                 if session_idx == self.hmm_warmup - 1:
                     self.detector.train()
                     result           = self.detector.predict(features)
                     predicted_regime = result['regime']
                     confidence       = result['confidence']
-
-                    # reset switcher so live trading gets its own fresh sequence
-                    # prevents warmup consuming sessions from the live distribution
-                    self.switcher = RegimeSwitcher(
-                        self.switcher_mean,
-                        self.switcher_std,
-                        self.seed + 999,
+                    self.switcher    = RegimeSwitcher(
+                        self.switcher_mean, self.switcher_std, self.seed + 999
                     )
 
                 self.results.append({
-                    'session_idx':      session_idx,
-                    'true_regime':      warmup_regime,
-                    'predicted_regime': predicted_regime,
-                    'confidence':       round(confidence, 4),
-                    'correct':          predicted_regime == warmup_regime,
-                    'veto':             False,
-                    'veto_reason':      'warmup',
-                    'retrained':        False,
-                    'error_rate':       0.0,
-                    'session_pnl':      0.0,
-                    'total_pnl':        0.0,
-                    'n_trades':         len(trades),
-                    'volatility':       round(volatility, 6),
-                    'drift_offset':     round(self.drift_offset, 4),
+                    'session_idx':          session_idx,
+                    'true_regime':          warmup_regime,
+                    'predicted_regime':     predicted_regime,
+                    'confidence':           round(confidence, 4),
+                    'correct':              predicted_regime == warmup_regime,
+                    'veto':                 False,
+                    'veto_reason':          'warmup',
+                    'retrained':            False,
+                    'error_rate':           0.0,
+                    'session_pnl':          0.0,
+                    'session_pnl_correct':  0.0,
+                    'session_pnl_incorrect':0.0,
+                    'total_pnl':            0.0,
+                    'n_trades':             len(trades),
+                    'volatility':           round(volatility, 6),
+                    'drift_offset':         round(self.drift_offset, 4),
+                    'is_transition':        False,
+                    'transition_from':      None,
+                    'transition_to':        None,
                 })
+                prev_true_regime = warmup_regime
                 continue
 
             # ── PHASE 2: live trading ─────────────────────────────────
             true_regime = self.switcher.next_regime()
+
+            # FIX 1: detect transitions
+            is_transition   = (prev_true_regime is not None and
+                                true_regime != prev_true_regime)
+            transition_from = prev_true_regime if is_transition else None
+            transition_to   = true_regime      if is_transition else None
 
             if true_regime == 'trending':
                 self.drift_offset += REGIME_SCHEDULES['trending']['drift']
             else:
                 self.drift_offset *= 0.9
 
-            # risk assessment uses last live session's volatility
             risk_result = self.risk.assess(
                 confidence  = confidence,
                 volatility  = self._last_live_volatility(),
@@ -373,8 +377,6 @@ class Coordinator:
             features   = extract_features(trades)
             volatility = _compute_volatility(trades)
 
-            # only feed clean sessions (vetoed = no agent) to HMM history
-            # prevents agent price impact distorting HMM emission distributions
             if risk_result['veto']:
                 self.detector.add_observation(features)
 
@@ -393,22 +395,34 @@ class Coordinator:
             session_pnl       = current_total_pnl - prev_total_pnl
             prev_total_pnl    = current_total_pnl
 
+            # FIX 2: split PnL by correctness
+            is_correct = (predicted_regime == true_regime)
+            session_pnl_correct   = session_pnl if is_correct  else 0.0
+            session_pnl_incorrect = session_pnl if not is_correct else 0.0
+
             self.results.append({
-                'session_idx':      session_idx,
-                'true_regime':      true_regime,
-                'predicted_regime': predicted_regime,
-                'confidence':       round(confidence, 4),
-                'correct':          predicted_regime == true_regime,
-                'veto':             risk_result['veto'],
-                'veto_reason':      risk_result['reason'],
-                'retrained':        meta_result['retrained'],
-                'error_rate':       round(meta_result['error_rate'], 4),
-                'session_pnl':      round(session_pnl, 2),
-                'total_pnl':        round(current_total_pnl, 2),
-                'n_trades':         len(trades),
-                'volatility':       round(volatility, 6),
-                'drift_offset':     round(self.drift_offset, 4),
+                'session_idx':          session_idx,
+                'true_regime':          true_regime,
+                'predicted_regime':     predicted_regime,
+                'confidence':           round(confidence, 4),
+                'correct':              is_correct,
+                'veto':                 risk_result['veto'],
+                'veto_reason':          risk_result['reason'],
+                'retrained':            meta_result['retrained'],
+                'error_rate':           round(meta_result['error_rate'], 4),
+                'session_pnl':          round(session_pnl, 2),
+                'session_pnl_correct':  round(session_pnl_correct, 2),
+                'session_pnl_incorrect':round(session_pnl_incorrect, 2),
+                'total_pnl':            round(current_total_pnl, 2),
+                'n_trades':             len(trades),
+                'volatility':           round(volatility, 6),
+                'drift_offset':         round(self.drift_offset, 4),
+                'is_transition':        is_transition,
+                'transition_from':      transition_from,
+                'transition_to':        transition_to,
             })
+
+            prev_true_regime = true_regime
 
         return self.results
 
@@ -425,20 +439,95 @@ class Coordinator:
         n_vetoes  = sum(1 for r in live if r['veto'])
         total_pnl = live[-1]['total_pnl']
 
+        # FIX 1: per-regime accuracy
+        per_regime_acc = {}
+        for regime in REGIMES:
+            regime_sessions = [r for r in live if r['true_regime'] == regime]
+            if regime_sessions:
+                correct = sum(1 for r in regime_sessions if r['correct'])
+                per_regime_acc[regime] = round(correct / len(regime_sessions), 4)
+            else:
+                per_regime_acc[regime] = 0.0
+
+        # FIX 1: per-transition-type detection lag
+        transition_lags = {}
+        for r in live:
+            if r['is_transition']:
+                key = f"{r['transition_from']}_to_{r['transition_to']}"
+                if key not in transition_lags:
+                    transition_lags[key] = []
+
+        # compute detection lag per transition type
+        prev_regime = live[0]['true_regime']
+        in_lag      = False
+        lag_count   = 0
+        trans_key   = None
+        trans_lag_data = {}
+
+        for r in live[1:]:
+            if r['true_regime'] != prev_regime:
+                in_lag    = True
+                lag_count = 0
+                trans_key = f"{prev_regime}_to_{r['true_regime']}"
+                if trans_key not in trans_lag_data:
+                    trans_lag_data[trans_key] = []
+            if in_lag:
+                lag_count += 1
+                if r['predicted_regime'] == r['true_regime']:
+                    trans_lag_data[trans_key].append(lag_count)
+                    in_lag = False
+            prev_regime = r['true_regime']
+
+        per_transition_lag = {
+            k: round(sum(v)/len(v), 3) for k, v in trans_lag_data.items() if v
+        }
+
+        # FIX 2: PnL by correctness
+        pnl_when_correct   = sum(r['session_pnl_correct']   for r in live)
+        pnl_when_incorrect = sum(r['session_pnl_incorrect']  for r in live)
+        n_correct_sessions = sum(1 for r in live if r['correct'] and not r['veto'])
+        n_incorrect_sessions = sum(1 for r in live if not r['correct'] and not r['veto'])
+        avg_pnl_correct   = (pnl_when_correct / n_correct_sessions
+                             if n_correct_sessions > 0 else 0.0)
+        avg_pnl_incorrect = (pnl_when_incorrect / n_incorrect_sessions
+                             if n_incorrect_sessions > 0 else 0.0)
+
+        # FIX 5: mean confidence at transitions vs stable periods
+        trans_conf   = [r['confidence'] for r in live if r['is_transition']]
+        stable_conf  = [r['confidence'] for r in live if not r['is_transition']]
+        mean_conf_transition = (sum(trans_conf)/len(trans_conf)
+                               if trans_conf else 0.0)
+        mean_conf_stable     = (sum(stable_conf)/len(stable_conf)
+                               if stable_conf else 0.0)
+
         pnls     = [r['session_pnl'] for r in live]
         mean_pnl = sum(pnls) / n
         if n > 1:
-            var_pnl = sum((p - mean_pnl) ** 2 for p in pnls) / (n - 1)
-            std_pnl = math.sqrt(var_pnl)
+            var_pnl = sum((p - mean_pnl)**2 for p in pnls) / (n - 1)
+            import math as _math
+            std_pnl = _math.sqrt(var_pnl)
             sharpe  = mean_pnl / std_pnl if std_pnl > 0 else 0.0
         else:
             sharpe = 0.0
 
         return {
-            'n_sessions':   n,
-            'hmm_accuracy': round(n_correct / n, 4),
-            'total_pnl':    round(total_pnl, 2),
-            'sharpe':       round(sharpe, 4),
-            'n_vetoes':     n_vetoes,
-            'n_retrains':   self.meta.n_retrains(),
+            'n_sessions':             n,
+            'hmm_accuracy':           round(n_correct / n, 4),
+            'total_pnl':              round(total_pnl, 2),
+            'sharpe':                 round(sharpe, 4),
+            'n_vetoes':               n_vetoes,
+            'n_retrains':             self.meta.n_retrains(),
+            # FIX 1 additions
+            'acc_trending':           per_regime_acc.get('trending', 0.0),
+            'acc_mean_reverting':     per_regime_acc.get('mean_reverting', 0.0),
+            'acc_volatile':           per_regime_acc.get('volatile', 0.0),
+            'per_transition_lag':     per_transition_lag,
+            # FIX 2 additions
+            'pnl_when_correct':       round(pnl_when_correct, 2),
+            'pnl_when_incorrect':     round(pnl_when_incorrect, 2),
+            'avg_pnl_correct':        round(avg_pnl_correct, 2),
+            'avg_pnl_incorrect':      round(avg_pnl_incorrect, 2),
+            # FIX 5 additions
+            'conf_at_transition':     round(mean_conf_transition, 4),
+            'conf_at_stable':         round(mean_conf_stable, 4),
         }

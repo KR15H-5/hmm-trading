@@ -78,7 +78,17 @@ def extract_features(trades):
     # ── Feature 3: price range ratio ─────────────────────────────────
     price_range = (max(prices) - min(prices)) / mean_price if mean_price > 0 else 0.0
 
-    return [momentum, vol, price_range]
+    # lag-1 autocorrelation — negative=mean-reverting, positive=trending
+    if len(log_returns) > 2:
+        mean_r   = sum(log_returns) / len(log_returns)
+        demeaned = [r - mean_r for r in log_returns]
+        num  = sum(demeaned[i]*demeaned[i-1] for i in range(1, len(demeaned)))
+        den  = sum(d**2 for d in demeaned)
+        autocorr = num / den if den > 0 else 0.0
+    else:
+        autocorr = 0.0
+
+    return [momentum, vol, price_range, autocorr]
 
 class HMMDetector:
     """
