@@ -214,11 +214,11 @@ class Coordinator:
         # previous value was blocking 60-65% of all sessions
         # agents were barely trading — defeating the purpose of the system
         self.risk = RiskManager(
-        confidence_threshold = 0.35,
-        volatility_threshold = 999.0,
-        max_drawdown         = -200.0,
-        cooldown             = 3,
-        enabled              = enable_risk,
+            confidence_threshold = 0.45,
+            volatility_threshold = 0.15,
+            max_drawdown         = -200.0,
+            cooldown             = 3,
+            enabled              = enable_risk,
         )
 
         self.agents = {
