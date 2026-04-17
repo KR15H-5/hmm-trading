@@ -20,7 +20,7 @@ from agents.market_maker  import MarketMakerAgent
 
 REGIME_SCHEDULES = {
     'trending': {
-        'supply': (85, 100), 'demand': (100, 130),
+        'supply': (70, 90), 'demand': (85, 110),
         'stepmode': 'jittered', 'drift': 1.5,
     },
     'mean_reverting': {
@@ -28,7 +28,7 @@ REGIME_SCHEDULES = {
         'stepmode': 'jittered', 'drift': 0.0,
     },
     'volatile': {
-        'supply': (20, 100), 'demand': (100, 180),
+        'supply': (40, 100), 'demand': (100, 160),
         'stepmode': 'random', 'drift': 0.0,
     },
 }
@@ -47,10 +47,32 @@ def _build_schedule(regime, start_time, end_time, drift_offset=0.0):
     s_hi  = max(1,   int(sched['supply'][1] + drift_offset))
     d_lo  = max(1,   int(sched['demand'][0] + drift_offset))
     d_hi  = min(500, int(sched['demand'][1] + drift_offset))
-    supply = [{'from': start_time, 'to': end_time,
-               'ranges': [(s_lo, s_hi)], 'stepmode': sched['stepmode']}]
-    demand = [{'from': start_time, 'to': end_time,
-               'ranges': [(d_lo, d_hi)], 'stepmode': sched['stepmode']}]
+    mid   = (start_time + end_time) / 2.0
+
+    if regime == 'trending':
+        # split session into two halves with a 15-unit price shift
+        # this creates genuine within-session momentum visible to HMM
+        shift = 15
+        supply = [
+            {'from': start_time, 'to': mid,
+             'ranges': [(s_lo, s_hi)], 'stepmode': sched['stepmode']},
+            {'from': mid, 'to': end_time,
+             'ranges': [(min(499, s_lo + shift), min(500, s_hi + shift))],
+             'stepmode': sched['stepmode']},
+        ]
+        demand = [
+            {'from': start_time, 'to': mid,
+             'ranges': [(d_lo, d_hi)], 'stepmode': sched['stepmode']},
+            {'from': mid, 'to': end_time,
+             'ranges': [(min(499, d_lo + shift), min(500, d_hi + shift))],
+             'stepmode': sched['stepmode']},
+        ]
+    else:
+        supply = [{'from': start_time, 'to': end_time,
+                   'ranges': [(s_lo, s_hi)], 'stepmode': sched['stepmode']}]
+        demand = [{'from': start_time, 'to': end_time,
+                   'ranges': [(d_lo, d_hi)], 'stepmode': sched['stepmode']}]
+
     return supply, demand
 
 
@@ -76,17 +98,14 @@ def _run_bse_session(true_regime, session_idx, active_agent,
         'sup': sup, 'dem': dem,
         'interval': 5.0, 'timemode': 'drip-fixed',
     }
-    n_zic = n_buyers // 2
-    n_zip = n_buyers - n_zic
-
     if active_agent is not None and active_agent.active:
         proptraders = [(agent_type, 1, {'agent_object': active_agent})]
     else:
         proptraders = []
 
     trader_spec = {
-        'buyers':      [('ZIC', n_zic), ('ZIP', n_zip)],
-        'sellers':     [('ZIC', n_zic), ('ZIP', n_zip)],
+        'buyers':      [('SHVR', 4), ('ZIP', 3), ('ZIC', 3)],
+        'sellers':     [('SHVR', 4), ('ZIP', 3), ('ZIC', 3)],
         'proptraders': proptraders,
     }
     dump_flags = {
