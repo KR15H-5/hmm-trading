@@ -1,0 +1,142 @@
+\relax 
+\providecommand\hyper@newdestlabel[2]{}
+\providecommand\HyField@AuxAddToFields[1]{}
+\providecommand\HyField@AuxAddToCoFields[2]{}
+\citation{cliff2018bse}
+\citation{rabiner1989tutorial}
+\citation{hamilton1989new}
+\citation{nguyen2018hmm}
+\citation{zheng2019dlhmm}
+\citation{finn2019online}
+\@writefile{toc}{\contentsline {section}{\numberline {1}Introduction and Research Question}{1}{section.1}\protected@file@percent }
+\newlabel{sec:intro}{{1}{1}{Introduction and Research Question}{section.1}{}}
+\citation{cliff2018bse}
+\citation{hmmlearn}
+\citation{cliff2018bse}
+\citation{baum1970maximization}
+\citation{adams2007bocpd}
+\citation{page1954cusum}
+\citation{doucet2009tutorial}
+\@writefile{toc}{\contentsline {paragraph}{Research question.}{2}{section*.1}\protected@file@percent }
+\@writefile{toc}{\contentsline {paragraph}{A note on ``multi-agent''.}{2}{section*.2}\protected@file@percent }
+\@writefile{toc}{\contentsline {section}{\numberline {2}Background and Related Work}{2}{section.2}\protected@file@percent }
+\newlabel{sec:background}{{2}{2}{Background and Related Work}{section.2}{}}
+\@writefile{toc}{\contentsline {subsection}{\numberline {2.1}Hidden Markov Models}{2}{subsection.2.1}\protected@file@percent }
+\@writefile{toc}{\contentsline {subsection}{\numberline {2.2}The Forward algorithm}{2}{subsection.2.2}\protected@file@percent }
+\newlabel{sec:forward}{{2.2}{2}{The Forward algorithm}{subsection.2.2}{}}
+\newlabel{eq:fwd-init}{{1}{2}{The Forward algorithm}{equation.1}{}}
+\newlabel{eq:fwd-recur}{{2}{2}{The Forward algorithm}{equation.2}{}}
+\newlabel{eq:fwd-term}{{3}{2}{The Forward algorithm}{equation.3}{}}
+\citation{finn2017maml}
+\citation{finn2019online}
+\citation{javed2019meta}
+\citation{cliff1997zip}
+\citation{cliff2018bse}
+\citation{chan2013algorithmic}
+\citation{avellaneda2008high}
+\@writefile{toc}{\contentsline {subsection}{\numberline {2.3}Why HMMs and not the alternatives?}{3}{subsection.2.3}\protected@file@percent }
+\newlabel{sec:alternatives}{{2.3}{3}{Why HMMs and not the alternatives?}{subsection.2.3}{}}
+\@writefile{toc}{\contentsline {subsection}{\numberline {2.4}Online meta-learning}{3}{subsection.2.4}\protected@file@percent }
+\@writefile{toc}{\contentsline {subsection}{\numberline {2.5}Trading agents in BSE}{3}{subsection.2.5}\protected@file@percent }
+\@writefile{toc}{\contentsline {paragraph}{Caveat on the market-maker.}{3}{section*.3}\protected@file@percent }
+\@writefile{toc}{\contentsline {section}{\numberline {3}System Design}{4}{section.3}\protected@file@percent }
+\newlabel{sec:design}{{3}{4}{System Design}{section.3}{}}
+\@writefile{toc}{\contentsline {subsection}{\numberline {3.1}Architecture overview}{4}{subsection.3.1}\protected@file@percent }
+\@writefile{lof}{\contentsline {figure}{\numberline {1}{\ignorespaces System architecture. The BSE \emph  {market\_session} entry point is treated as a sealed environment whose only output is the trade tape; everything in the centre and right columns is our own code.}}{4}{figure.caption.4}\protected@file@percent }
+\providecommand*\caption@xref[2]{\@setref\relax\@undefined{#1}}
+\newlabel{fig:arch}{{1}{4}{System architecture. The BSE \emph {market\_session} entry point is treated as a sealed environment whose only output is the trade tape; everything in the centre and right columns is our own code}{figure.caption.4}{}}
+\@writefile{toc}{\contentsline {subsection}{\numberline {3.2}Regime injection through supply/demand schedules}{4}{subsection.3.2}\protected@file@percent }
+\newlabel{sec:regime-injection}{{3.2}{4}{Regime injection through supply/demand schedules}{subsection.3.2}{}}
+\@writefile{toc}{\contentsline {subsection}{\numberline {3.3}Feature extraction}{4}{subsection.3.3}\protected@file@percent }
+\newlabel{sec:features}{{3.3}{4}{Feature extraction}{subsection.3.3}{}}
+\citation{baum1970maximization}
+\@writefile{toc}{\contentsline {subsection}{\numberline {3.4}HMM detector}{5}{subsection.3.4}\protected@file@percent }
+\newlabel{sec:hmm-impl}{{3.4}{5}{HMM detector}{subsection.3.4}{}}
+\@writefile{toc}{\contentsline {paragraph}{Why not run the Forward algorithm at inference?}{5}{section*.5}\protected@file@percent }
+\newlabel{eq:emission-scoring}{{4}{5}{Why not run the Forward algorithm at inference?}{equation.4}{}}
+\@writefile{toc}{\contentsline {paragraph}{State-to-regime mapping.}{5}{section*.6}\protected@file@percent }
+\@writefile{toc}{\contentsline {subsection}{\numberline {3.5}Meta-learner}{5}{subsection.3.5}\protected@file@percent }
+\@writefile{toc}{\contentsline {subsection}{\numberline {3.6}Trading agents}{5}{subsection.3.6}\protected@file@percent }
+\citation{abramowitz1964handbook}
+\@writefile{toc}{\contentsline {subsection}{\numberline {3.7}Risk manager}{6}{subsection.3.7}\protected@file@percent }
+\@writefile{toc}{\contentsline {section}{\numberline {4}Experimental Methodology}{6}{section.4}\protected@file@percent }
+\newlabel{sec:method}{{4}{6}{Experimental Methodology}{section.4}{}}
+\@writefile{toc}{\contentsline {subsection}{\numberline {4.1}Conditions}{6}{subsection.4.1}\protected@file@percent }
+\@writefile{toc}{\contentsline {subsection}{\numberline {4.2}Metrics}{6}{subsection.4.2}\protected@file@percent }
+\@writefile{toc}{\contentsline {subsection}{\numberline {4.3}Statistical analysis}{6}{subsection.4.3}\protected@file@percent }
+\newlabel{sec:stats}{{4.3}{6}{Statistical analysis}{subsection.4.3}{}}
+\@writefile{toc}{\contentsline {paragraph}{Multiple-comparisons correction.}{6}{section*.7}\protected@file@percent }
+\@writefile{toc}{\contentsline {paragraph}{Reproducibility.}{7}{section*.8}\protected@file@percent }
+\@writefile{toc}{\contentsline {subsection}{\numberline {4.4}Implementation and compute}{7}{subsection.4.4}\protected@file@percent }
+\@writefile{toc}{\contentsline {section}{\numberline {5}Results}{7}{section.5}\protected@file@percent }
+\newlabel{sec:results}{{5}{7}{Results}{section.5}{}}
+\@writefile{toc}{\contentsline {subsection}{\numberline {5.1}Overall accuracy}{7}{subsection.5.1}\protected@file@percent }
+\newlabel{fig:acc-speed}{{2a}{7}{Accuracy versus switching speed. Error bars: 95\,\% CI over 50 runs. Meta-learning produces no statistically significant improvement at any speed}{figure.caption.9}{}}
+\newlabel{sub@fig:acc-speed}{{a}{7}{Accuracy versus switching speed. Error bars: 95\,\% CI over 50 runs. Meta-learning produces no statistically significant improvement at any speed}{figure.caption.9}{}}
+\newlabel{fig:acc-sl}{{2b}{7}{Accuracy versus session length. A clean monotonic increase from 55\% (60\,s sessions) to 78\% (300\,s sessions)}{figure.caption.9}{}}
+\newlabel{sub@fig:acc-sl}{{b}{7}{Accuracy versus session length. A clean monotonic increase from 55\% (60\,s sessions) to 78\% (300\,s sessions)}{figure.caption.9}{}}
+\@writefile{lof}{\contentsline {figure}{\numberline {2}{\ignorespaces Accuracy under the two experimental sweeps.}}{7}{figure.caption.9}\protected@file@percent }
+\@writefile{toc}{\contentsline {subsection}{\numberline {5.2}Effect of session length (RQ2)}{7}{subsection.5.2}\protected@file@percent }
+\@writefile{toc}{\contentsline {subsection}{\numberline {5.3}Effect of meta-learning (RQ1)}{7}{subsection.5.3}\protected@file@percent }
+\@writefile{lot}{\contentsline {table}{\numberline {1}{\ignorespaces Pairwise comparison of meta-learning on vs.\ off at each switching speed. All differences are computed as $\text  {meta}-\text  {nometa}$: \emph  {positive} $\Delta a$ means meta-learning is more accurate; \emph  {positive} $\Delta \text  {lag}$ means meta-learning is \emph  {slower} to detect changes (i.e.\ worse); \emph  {positive} $\Delta \text  {PnL}$ means meta-learning earns more. Welch's t-test p-values in parentheses; none reaches $0.05$, and after Bonferroni correction for 12 tests the smallest adjusted $p$ is $0.60$ (\S  \ref {sec:stats}).}}{8}{table.caption.10}\protected@file@percent }
+\newlabel{tab:meta-effect}{{1}{8}{Pairwise comparison of meta-learning on vs.\ off at each switching speed. All differences are computed as $\text {meta}-\text {nometa}$: \emph {positive} $\Delta a$ means meta-learning is more accurate; \emph {positive} $\Delta \text {lag}$ means meta-learning is \emph {slower} to detect changes (i.e.\ worse); \emph {positive} $\Delta \text {PnL}$ means meta-learning earns more. Welch's t-test p-values in parentheses; none reaches $0.05$, and after Bonferroni correction for 12 tests the smallest adjusted $p$ is $0.60$ (\S \ref {sec:stats})}{table.caption.10}{}}
+\newlabel{fig:lag-speed}{{3a}{8}{Detection lag versus switching speed}{figure.caption.11}{}}
+\newlabel{sub@fig:lag-speed}{{a}{8}{Detection lag versus switching speed}{figure.caption.11}{}}
+\newlabel{fig:retrains}{{3b}{8}{Mean retrains triggered per 100-session run}{figure.caption.11}{}}
+\newlabel{sub@fig:retrains}{{b}{8}{Mean retrains triggered per 100-session run}{figure.caption.11}{}}
+\@writefile{lof}{\contentsline {figure}{\numberline {3}{\ignorespaces Why meta-learning has no effect: the controller barely fires.}}{8}{figure.caption.11}\protected@file@percent }
+\@writefile{toc}{\contentsline {paragraph}{Why doesn't meta-learning help?}{8}{section*.12}\protected@file@percent }
+\@writefile{toc}{\contentsline {subsection}{\numberline {5.4}Threshold sweep --- does a more eager meta-learner help?}{8}{subsection.5.4}\protected@file@percent }
+\newlabel{sec:threshold-sweep}{{5.4}{8}{Threshold sweep --- does a more eager meta-learner help?}{subsection.5.4}{}}
+\@writefile{lot}{\contentsline {table}{\numberline {2}{\ignorespaces Threshold-sweep at the medium switching speed ($\mu =10$, $\sigma =3$, 300\,s sessions, $50$ trials each except $0.35$ which lost one trial to the early-warmup tape edge case mentioned in \S  \ref {sec:method}). Values are mean $\pm $ 95\% CI.}}{8}{table.caption.13}\protected@file@percent }
+\newlabel{tab:thresh-sweep}{{2}{8}{Threshold-sweep at the medium switching speed ($\mu =10$, $\sigma =3$, 300\,s sessions, $50$ trials each except $0.35$ which lost one trial to the early-warmup tape edge case mentioned in \S \ref {sec:method}). Values are mean $\pm $ 95\% CI}{table.caption.13}{}}
+\@writefile{lof}{\contentsline {figure}{\numberline {4}{\ignorespaces Threshold sweep. Left: accuracy (blue, left axis) falls as the threshold drops, while retrain frequency (orange bars, right axis) rises from $0.68$ to $4.76$ retrains per run. Right: detection lag \emph  {worsens} between $0.50$ and $0.35$, then improves slightly at $0.20$ but never recovers above the no-retrain baseline.}}{9}{figure.caption.14}\protected@file@percent }
+\newlabel{fig:thresh-sweep}{{4}{9}{Threshold sweep. Left: accuracy (blue, left axis) falls as the threshold drops, while retrain frequency (orange bars, right axis) rises from $0.68$ to $4.76$ retrains per run. Right: detection lag \emph {worsens} between $0.50$ and $0.35$, then improves slightly at $0.20$ but never recovers above the no-retrain baseline}{figure.caption.14}{}}
+\@writefile{toc}{\contentsline {subsection}{\numberline {5.5}Per-regime accuracy (RQ3)}{9}{subsection.5.5}\protected@file@percent }
+\newlabel{sec:per-regime}{{5.5}{9}{Per-regime accuracy (RQ3)}{subsection.5.5}{}}
+\@writefile{toc}{\contentsline {subsection}{\numberline {5.6}Trading performance}{9}{subsection.5.6}\protected@file@percent }
+\@writefile{toc}{\contentsline {subsection}{\numberline {5.7}Confidence calibration}{9}{subsection.5.7}\protected@file@percent }
+\newlabel{fig:per-regime}{{5a}{10}{Per-regime accuracy across switching speeds (meta on)}{figure.caption.15}{}}
+\newlabel{sub@fig:per-regime}{{a}{10}{Per-regime accuracy across switching speeds (meta on)}{figure.caption.15}{}}
+\newlabel{fig:conf}{{5b}{10}{\textbf {Reconstructed} confusion matrix (off-diagonals \emph {not} measured --- see caption)}{figure.caption.15}{}}
+\newlabel{sub@fig:conf}{{b}{10}{\textbf {Reconstructed} confusion matrix (off-diagonals \emph {not} measured --- see caption)}{figure.caption.15}{}}
+\@writefile{lof}{\contentsline {figure}{\numberline {5}{\ignorespaces Volatile sessions are detected almost perfectly; the \emph  {mean-reverting} regime is the systematic weak point. \textbf  {Important caveat for (b):} the per-trial logs we record contain the per-regime diagonal accuracy but not the predicted-vs-true regime pair on incorrect sessions. The off-diagonals shown here are therefore \emph  {reconstructed} by equally splitting $1-\text  {diagonal}$ across the two other columns, which is the maximum-entropy assumption given the available data. The matrix is indicative of the per-regime difficulty ranking only; the specific off-diagonal split is not measured. This is listed as a logging gap in \S  \ref {sec:discussion}.}}{10}{figure.caption.15}\protected@file@percent }
+\@writefile{toc}{\contentsline {section}{\numberline {6}Discussion}{10}{section.6}\protected@file@percent }
+\newlabel{sec:discussion}{{6}{10}{Discussion}{section.6}{}}
+\@writefile{toc}{\contentsline {paragraph}{The headline answer to the research question is \emph  {no}.}{10}{section*.17}\protected@file@percent }
+\@writefile{toc}{\contentsline {paragraph}{What \emph  {does} matter is observation richness.}{10}{section*.18}\protected@file@percent }
+\@writefile{toc}{\contentsline {paragraph}{Why is mean-reverting so much harder?}{10}{section*.19}\protected@file@percent }
+\citation{zheng2019dlhmm}
+\newlabel{fig:pnl}{{6a}{11}{Total PnL per 100-session run}{figure.caption.16}{}}
+\newlabel{sub@fig:pnl}{{a}{11}{Total PnL per 100-session run}{figure.caption.16}{}}
+\newlabel{fig:conf-bars}{{6b}{11}{Mean posterior on transition vs.\ stable sessions. \textbf {Note:} y-axis is compressed to the $0.92$--$1.00$ range; the visible gap corresponds to a $0.5$--$1.0$ percentage-point drop, not a large one}{figure.caption.16}{}}
+\newlabel{sub@fig:conf-bars}{{b}{11}{Mean posterior on transition vs.\ stable sessions. \textbf {Note:} y-axis is compressed to the $0.92$--$1.00$ range; the visible gap corresponds to a $0.5$--$1.0$ percentage-point drop, not a large one}{figure.caption.16}{}}
+\@writefile{lof}{\contentsline {figure}{\numberline {6}{\ignorespaces Trading performance and HMM confidence calibration.}}{11}{figure.caption.16}\protected@file@percent }
+\@writefile{toc}{\contentsline {paragraph}{Limitations.}{11}{section*.20}\protected@file@percent }
+\@writefile{toc}{\contentsline {paragraph}{Connection to contemporary research.}{11}{section*.21}\protected@file@percent }
+\bibcite{cliff1997zip}{1}
+\bibcite{cliff2018bse}{2}
+\bibcite{rabiner1989tutorial}{3}
+\@writefile{toc}{\contentsline {section}{\numberline {7}Conclusion and Future Work}{12}{section.7}\protected@file@percent }
+\newlabel{sec:conclusion}{{7}{12}{Conclusion and Future Work}{section.7}{}}
+\@writefile{toc}{\contentsline {paragraph}{Successes.}{12}{section*.22}\protected@file@percent }
+\@writefile{toc}{\contentsline {paragraph}{Limitations and future work.}{12}{section*.23}\protected@file@percent }
+\bibcite{baum1970maximization}{4}
+\bibcite{hamilton1989new}{5}
+\bibcite{nguyen2018hmm}{6}
+\bibcite{zheng2019dlhmm}{7}
+\bibcite{finn2017maml}{8}
+\bibcite{finn2019online}{9}
+\bibcite{javed2019meta}{10}
+\bibcite{chan2013algorithmic}{11}
+\bibcite{avellaneda2008high}{12}
+\bibcite{hmmlearn}{13}
+\bibcite{abramowitz1964handbook}{14}
+\bibcite{adams2007bocpd}{15}
+\bibcite{page1954cusum}{16}
+\bibcite{doucet2009tutorial}{17}
+\@writefile{toc}{\contentsline {section}{\numberline {A}Final progress block of the 600-trial sweep}{13}{appendix.A}\protected@file@percent }
+\newlabel{app:term}{{A}{13}{Final progress block of the 600-trial sweep}{appendix.A}{}}
+\@writefile{lof}{\contentsline {figure}{\numberline {7}{\ignorespaces Final progress block of the 600-trial experimental sweep (\texttt  {run\_log.txt}, lines 21\,640--21\,673). All 12 conditions completed their 50 trials each; no trial errors after the initial warmup-tape edge case was patched.}}{14}{figure.caption.26}\protected@file@percent }
+\newlabel{fig:term}{{7}{14}{Final progress block of the 600-trial experimental sweep (\texttt {run\_log.txt}, lines 21\,640--21\,673). All 12 conditions completed their 50 trials each; no trial errors after the initial warmup-tape edge case was patched}{figure.caption.26}{}}
+\gdef \@abspage@last{14}
