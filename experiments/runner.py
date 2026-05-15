@@ -1,5 +1,3 @@
-# experiments/runner.py
-
 import sys
 import os
 import csv
@@ -207,7 +205,6 @@ def run_experiments(n_runs=N_RUNS, n_workers=4, output_dir='results'):
             print('\n'.join(new_lines))
             n_lines = len(new_lines)
 
-    # save raw
     raw_path = os.path.join(output_dir, 'raw_results.csv')
     fieldnames = [
         'condition','experiment','speed','session_length','meta','seed',
@@ -225,7 +222,6 @@ def run_experiments(n_runs=N_RUNS, n_workers=4, output_dir='results'):
         writer.writeheader()
         writer.writerows(all_results)
 
-    # summary
     grouped = {}
     for r in all_results:
         grouped.setdefault(r['condition'], []).append(r)
@@ -274,7 +270,6 @@ def run_experiments(n_runs=N_RUNS, n_workers=4, output_dir='results'):
         writer.writeheader()
         writer.writerows(summary_rows)
 
-    # pairwise tests
     test_rows = []
     for speed in SWITCHING_SPEEDS:
         mk, nk = f'{speed}_meta', f'{speed}_nometa'

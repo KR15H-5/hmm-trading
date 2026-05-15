@@ -1,6 +1,3 @@
-# test_agents.py
-# run with: python3 test_agents.py
-
 import sys
 import os
 import random
@@ -12,10 +9,6 @@ from agents.base import BaseAgent
 from agents.momentum import MomentumAgent
 from agents.contrarian import ContrarianAgent
 from agents.market_maker import MarketMakerAgent
-
-# ─────────────────────────────────────────────────────────────────────────────
-# Regime schedules and build_schedule — copied from test_market.py
-# ─────────────────────────────────────────────────────────────────────────────
 
 REGIME_SCHEDULES = {
     'trending': {
@@ -50,27 +43,12 @@ def build_schedule(regime, start_time, end_time, drift_offset=0.0):
                         'ranges': [(d_lo, d_hi)], 'stepmode': sched['stepmode']}]
     return supply_schedule, demand_schedule
 
-# ─────────────────────────────────────────────────────────────────────────────
-# Run a session with an agent injected live into BSE
-# ─────────────────────────────────────────────────────────────────────────────
-
 def run_session_with_live_agent(regime, agent, agent_type, session_idx,
                                  session_length=60.0):
-    """
-    Run one BSE session with our agent injected as a live proptrader.
-
-    BSE will call agent.getorder() and agent.respond() directly
-    every timestep — exactly like any other trader.
-
-    agent_type must be 'MOMENTUM', 'CONTRARIAN', or 'MARKETMAKER'
-    — these match the new cases we added to BSE's trader_type().
-    """
     start_time = 0.0
     end_time   = session_length
 
-    supply_schedule, demand_schedule = build_schedule(
-        regime, start_time, end_time
-    )
+    supply_schedule, demand_schedule = build_schedule(regime, start_time, end_time)
     order_schedule = {
         'sup':      supply_schedule,
         'dem':      demand_schedule,
@@ -78,13 +56,9 @@ def run_session_with_live_agent(regime, agent, agent_type, session_idx,
         'timemode': 'drip-fixed',
     }
 
-    # background traders
     trader_spec = {
-        'buyers':  [('ZIC', 5), ('ZIP', 5)],
-        'sellers': [('ZIC', 5), ('ZIP', 5)],
-        # inject our agent as a proptrader
-        # BSE will call trader_type('MOMENTUM', 'P00', {'agent_object': agent})
-        # which now returns our pre-built agent object directly
+        'buyers':      [('ZIC', 5), ('ZIP', 5)],
+        'sellers':     [('ZIC', 5), ('ZIP', 5)],
         'proptraders': [(agent_type, 1, {'agent_object': agent})],
     }
 
@@ -103,7 +77,6 @@ def run_session_with_live_agent(regime, agent, agent_type, session_idx,
         dump_flags, False,
     )
 
-    # read tape
     tape_file = f'session_{session_idx:04d}_tape.csv'
     trades = []
     if os.path.exists(tape_file):
@@ -120,10 +93,6 @@ def run_session_with_live_agent(regime, agent, agent_type, session_idx,
 
     return trades
 
-
-# ─────────────────────────────────────────────────────────────────────────────
-# Tests
-# ─────────────────────────────────────────────────────────────────────────────
 
 if __name__ == '__main__':
 

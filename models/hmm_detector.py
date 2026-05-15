@@ -1,4 +1,3 @@
-# models/hmm_detector.py
 import warnings
 warnings.filterwarnings('ignore')
 import sys
@@ -9,38 +8,15 @@ from hmmlearn import hmm
 
 sys.path.insert(0, os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 
-
 REGIMES = ['trending', 'mean_reverting', 'volatile']
 
-
 def extract_features(trades):
-    """
-    Convert a session's trade list into a 4-element observation vector.
-
-    Features
-    --------
-    1. price_momentum   — (mean second half - mean first half) / mean price
-                          Captures within-session directional drift.
-                          Positive in trending regime due to split-schedule design.
-
-    2. volatility       — std dev of log-returns between consecutive trades
-                          High in volatile regime, low in calm regimes.
-
-    3. price_range_ratio — (max - min) / mean
-                          Wide in volatile, narrow in calm regimes.
-
-    4. lag1_autocorr    — lag-1 autocorrelation of log-returns
-                          Mean-reverting: negative (price reversals)
-                          Trending: positive (price continuation)
-                          Key discriminator between calm regime types.
-    """
     if len(trades) < 4:
         return [0.0, 0.0, 0.0, 0.0]
 
     prices = [t['price'] for t in trades]
     n      = len(prices)
 
-    # Feature 1: price momentum
     first_half  = prices[:n // 2]
     second_half = prices[n // 2:]
     mean_first  = sum(first_half)  / len(first_half)
@@ -48,7 +24,6 @@ def extract_features(trades):
     mean_price  = sum(prices) / n
     momentum    = (mean_second - mean_first) / mean_price if mean_price > 0 else 0.0
 
-    # Feature 2: volatility
     log_returns = []
     for i in range(1, n):
         if prices[i - 1] > 0:
@@ -61,10 +36,8 @@ def extract_features(trades):
     else:
         vol = 0.0
 
-    # Feature 3: price range ratio
     price_range = (max(prices) - min(prices)) / mean_price if mean_price > 0 else 0.0
 
-    # Feature 4: lag-1 autocorrelation
     if len(log_returns) > 2:
         mean_r   = sum(log_returns) / len(log_returns)
         demeaned = [r - mean_r for r in log_returns]
@@ -78,39 +51,6 @@ def extract_features(trades):
 
 
 class HMMDetector:
-    """
-    Detects market regimes using a Gaussian Hidden Markov Model with
-    online forward-algorithm filtering.
-
-    TRAINING (Baum-Welch / EM)
-    --------------------------
-    Fitted once on warmup observations via hmmlearn's GaussianHMM.
-    Learns emission means/variances per state and transition matrix A[i,j].
-
-    PREDICTION (online HMM forward filter)
-    ---------------------------------------
-    Maintains a running forward variable alpha_t — the filtered posterior
-    P(state_t | x_1,...,x_t). Updated each session via the HMM filter:
-
-        Predict:  alpha_pred(j) = sum_i  alpha_{t-1}(i) * A[i,j]
-        Update:   alpha_t(j)   ∝ alpha_pred(j) * p(x_t | state=j)
-        Normalise: alpha_t sums to 1
-
-    This correctly incorporates BOTH the emission likelihood of the current
-    observation AND the transition structure learned during training.
-    The previous approach (direct emission scoring) discarded the transition
-    matrix entirely, reducing the model to a Gaussian mixture classifier.
-    The forward filter retains the Markov structure: if the market was
-    volatile last session, the transition probabilities make it more likely
-    to remain volatile even if current features are ambiguous.
-
-    STATE MAPPING
-    -------------
-    After EM training, states are mapped to regime names via emission means:
-      - volatile      -> highest volatility feature (index 1)
-      - trending      -> of remainder, highest |momentum| (index 0)
-      - mean_reverting -> remaining state
-    """
 
     def __init__(self, n_states=3, n_iter=100, warmup=10):
         self.n_states   = n_states
@@ -118,25 +58,16 @@ class HMMDetector:
         self.warmup     = warmup
         self.is_trained = False
 
-        self.model              = None
-        self.state_to_regime    = {}
+        self.model               = None
+        self.state_to_regime     = {}
         self.observation_history = []
         self.prediction_history  = []
-
-        # running forward variable P(state_t | x_1,...,x_t)
-        # initialised uniform; updated each session via forward recursion
-        self._alpha = None
+        self._alpha              = None
 
     def add_observation(self, features):
-        """Add one session's features to training history."""
         self.observation_history.append(features)
 
     def train(self):
-        """
-        Fit GaussianHMM on observation history using Baum-Welch EM.
-        Resets forward variable to uniform after training.
-        Returns True if training succeeded.
-        """
         if len(self.observation_history) < self.warmup:
             return False
 
@@ -159,7 +90,6 @@ class HMMDetector:
             self.model.fit(X, lengths)
             self.is_trained = True
             self._map_states_to_regimes()
-            # reset forward variable to uniform after each training
             self._alpha = np.full(n, 1.0 / n)
             return True
         except Exception as e:
@@ -167,16 +97,6 @@ class HMMDetector:
             return False
 
     def predict(self, features):
-        """
-        Online HMM forward filter: predict current regime.
-
-        Updates running forward variable alpha using:
-          1. Predict step: alpha_pred = alpha @ A  (transition)
-          2. Update step:  alpha_new  = alpha_pred * emit  (emission)
-          3. Normalise
-
-        Returns dict: regime, confidence, all_probs, trained
-        """
         if not self.is_trained:
             return {
                 'regime':     'mean_reverting',
@@ -187,7 +107,6 @@ class HMMDetector:
 
         obs = np.array(features, dtype=float)
 
-        # emission log-likelihoods under each state's Gaussian
         log_emit = np.zeros(self.n_states)
         for state in range(self.n_states):
             mean_s = self.model.means_[state]
@@ -200,14 +119,12 @@ class HMMDetector:
                 lp    += -0.5 * ((obs[j] - mean_s[j]) ** 2) / sigma2
             log_emit[state] = lp
 
-        # numerical stability
         log_emit -= log_emit.max()
         emit = np.exp(log_emit)
 
-        # forward filter recursion
-        A          = self.model.transmat_       # (n_states, n_states)
-        alpha_pred = self._alpha @ A            # predict step
-        alpha_new  = alpha_pred * emit          # update step
+        A          = self.model.transmat_
+        alpha_pred = self._alpha @ A
+        alpha_new  = alpha_pred * emit
 
         total = alpha_new.sum()
         if total > 0:
@@ -236,22 +153,12 @@ class HMMDetector:
         }
 
     def update(self, features, window=50):
-        """
-        Add observation and retrain on rolling window (called by meta-learner).
-        Forward variable reset to uniform after retraining.
-        """
         self.add_observation(features)
         if len(self.observation_history) > window:
             self.observation_history = self.observation_history[-window:]
         return self.train()
 
     def _map_states_to_regimes(self):
-        """
-        Map HMM state indices to regime names using emission means:
-          volatile      -> highest volatility (feature 1)
-          trending      -> of remainder, highest |momentum| (feature 0)
-          mean_reverting -> remaining state
-        """
         means        = self.model.means_
         volatile_idx = int(np.argmax(means[:, 1]))
         remaining    = [i for i in range(self.n_states) if i != volatile_idx]

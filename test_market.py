@@ -1,6 +1,3 @@
-# test_market.py
-# run with: python3 test_market.py
-
 import sys
 import os
 import random
@@ -9,10 +6,6 @@ import contextlib
 
 sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
 import BSE
-
-# ─────────────────────────────────────────────────────────────────────────────
-# Block 2 — Regime schedules
-# ─────────────────────────────────────────────────────────────────────────────
 
 REGIME_SCHEDULES = {
     'trending': {
@@ -37,10 +30,6 @@ REGIME_SCHEDULES = {
 
 REGIMES = ['trending', 'mean_reverting', 'volatile']
 
-# ─────────────────────────────────────────────────────────────────────────────
-# Block 3 — Build BSE schedule from regime
-# ─────────────────────────────────────────────────────────────────────────────
-
 def build_schedule(regime, start_time, end_time, drift_offset=0.0):
     sched = REGIME_SCHEDULES[regime]
 
@@ -55,10 +44,6 @@ def build_schedule(regime, start_time, end_time, drift_offset=0.0):
                         'ranges': [(d_lo, d_hi)], 'stepmode': sched['stepmode']}]
 
     return supply_schedule, demand_schedule
-
-# ─────────────────────────────────────────────────────────────────────────────
-# Block 4 — Run one BSE session
-# ─────────────────────────────────────────────────────────────────────────────
 
 def run_session(regime, session_idx, n_buyers=10, n_sellers=10,
                 session_length=60.0, drift_offset=0.0, extra_traders=None):
@@ -128,83 +113,36 @@ def run_session(regime, session_idx, n_buyers=10, n_sellers=10,
         'regime':  regime,
     }
 
-# ─────────────────────────────────────────────────────────────────────────────
-# Block 5 — Run many sessions with regime switching
-# ─────────────────────────────────────────────────────────────────────────────
-
 def draw_duration(mean_duration, std_duration):
-    """
-    How many sessions do we stay in this regime?
-
-    We draw randomly so switching isn't perfectly regular.
-    A perfectly regular switch would be easy for the HMM to exploit
-    and wouldn't reflect real market behaviour.
-
-    min(1) so we always stay at least one full session.
-    """
     duration = random.gauss(mean_duration, std_duration)
     return max(1, int(round(duration)))
-
 
 def run_episode(n_sessions=20, mean_duration=5, std_duration=2,
                 n_buyers=10, n_sellers=10, session_length=60.0,
                 seed=42):
-    """
-    Run a full episode of back-to-back BSE sessions with regime switching.
-
-    Parameters
-    ----------
-    n_sessions    : total number of sessions to run
-    mean_duration : average number of sessions before switching regime
-    std_duration  : randomness in how long each regime lasts
-    n_buyers      : background buyers per session
-    n_sellers     : background sellers per session
-    session_length: simulated seconds per session
-    seed          : random seed — same seed always gives same episode
-
-    Returns
-    -------
-    list of dicts, one per session:
-        session_idx  : 0, 1, 2, ...
-        true_regime  : which regime was actually running
-        trades       : list of trade dicts from BSE
-        n_trades     : number of trades that happened
-        avg_price    : average transaction price that session
-        price_range  : max price minus min price that session
-        drift_offset : how much cumulative drift has built up
-    """
 
     random.seed(seed)
 
     results      = []
     drift_offset = 0.0
 
-    # start in a random regime and draw how long to stay
     current_regime     = random.choice(REGIMES)
     sessions_remaining = draw_duration(mean_duration, std_duration)
 
     for session_idx in range(n_sessions):
 
-        # ── step 1: check if it is time to switch regime ──────────────────
-        # we decrement BEFORE running the session so session 0 counts
         sessions_remaining -= 1
 
         if sessions_remaining <= 0:
-            # pick any regime except the current one
             other_regimes      = [r for r in REGIMES if r != current_regime]
             current_regime     = random.choice(other_regimes)
             sessions_remaining = draw_duration(mean_duration, std_duration)
 
-        # ── step 2: update drift ──────────────────────────────────────────
-        # drift only builds up during trending sessions
-        # it slowly decays when we are in any other regime
-        # this mimics how real price trends gradually fade
         if current_regime == 'trending':
             drift_offset += REGIME_SCHEDULES['trending']['drift']
         else:
             drift_offset *= 0.9
 
-        # ── step 3: run the session ───────────────────────────────────────
         session_result = run_session(
             regime         = current_regime,
             session_idx    = session_idx,
@@ -214,7 +152,6 @@ def run_episode(n_sessions=20, mean_duration=5, std_duration=2,
             drift_offset   = drift_offset,
         )
 
-        # ── step 4: summarise the trades ──────────────────────────────────
         trades = session_result['trades']
         prices = [t['price'] for t in trades]
 
@@ -225,7 +162,6 @@ def run_episode(n_sessions=20, mean_duration=5, std_duration=2,
             avg_price   = 0.0
             price_range = 0.0
 
-        # ── step 5: store everything ──────────────────────────────────────
         results.append({
             'session_idx':  session_idx,
             'true_regime':  current_regime,
@@ -238,9 +174,6 @@ def run_episode(n_sessions=20, mean_duration=5, std_duration=2,
 
     return results
 
-# ─────────────────────────────────────────────────────────────────────────────
-# Tests
-# ─────────────────────────────────────────────────────────────────────────────
 
 if __name__ == '__main__':
 

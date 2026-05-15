@@ -1,5 +1,3 @@
-# test_hmm.py
-
 import sys
 import os
 import random
@@ -64,7 +62,6 @@ if __name__ == '__main__':
     print("Phase 1: training — 20 sessions per regime (60 total)")
     print("=" * 60)
 
-    # interleave regimes so HMM sees realistic switching patterns
     training_order = []
     for _ in range(20):
         training_order += ['trending', 'mean_reverting', 'volatile']
@@ -79,7 +76,6 @@ if __name__ == '__main__':
     print(f"Training succeeded : {success}")
     print(f"State mapping      : {detector.state_to_regime}")
 
-    # show learned emission means so we can see if states are separating
     if detector.model is not None:
         print(f"\nLearned emission means (momentum, volatility, range):")
         for state, regime in detector.state_to_regime.items():
@@ -94,8 +90,8 @@ if __name__ == '__main__':
           f"{'Confidence':<12} {'Correct'}")
     print("-" * 65)
 
-    correct   = 0
-    total     = 0
+    correct    = 0
+    total      = 0
     test_order = ['trending'] * 5 + ['mean_reverting'] * 5 + ['volatile'] * 5
 
     for i, true_regime in enumerate(test_order):

@@ -1,6 +1,3 @@
-# test_meta_learner.py
-# run with: python3 test_meta_learner.py
-
 import sys
 import os
 import random
@@ -59,7 +56,6 @@ def run_session(regime, session_idx, drift_offset=0.0):
 
 if __name__ == '__main__':
 
-    # ── Phase 1: train HMM on 60 warmup sessions ─────────────────────
     print("=" * 60)
     print("Phase 1: warmup training — 60 sessions")
     print("=" * 60)
@@ -77,7 +73,6 @@ if __name__ == '__main__':
     detector.train()
     print(f"HMM trained. State mapping: {detector.state_to_regime}")
 
-    # ── Phase 2: run 40 sessions with meta-learner active ────────────
     print()
     print("=" * 60)
     print("Phase 2: 40 live sessions with meta-learner")
@@ -93,7 +88,6 @@ if __name__ == '__main__':
         enabled           = True,
     )
 
-    # fast switching sequence — changes every 2-3 sessions
     fast_sequence = (
         ['trending']       * 3 +
         ['volatile']       * 2 +
@@ -141,13 +135,11 @@ if __name__ == '__main__':
     print(f"Total retrains    : {meta.n_retrains()}")
     print(f"Retrain log       : {meta.retrain_log}")
 
-    # ── Phase 3: compare WITH vs WITHOUT meta-learner ─────────────────
     print()
     print("=" * 60)
     print("Phase 3: same sessions WITHOUT meta-learner (ablation)")
     print("=" * 60)
 
-    # retrain a fresh detector — same warmup
     detector2 = HMMDetector(n_states=3, n_iter=100, warmup=20)
     for i, regime in enumerate(training_order):
         trades   = run_session(regime, session_idx=i)
@@ -155,10 +147,7 @@ if __name__ == '__main__':
         detector2.add_observation(features)
     detector2.train()
 
-    meta_off = MetaLearner(
-        detector  = detector2,
-        enabled   = False,   # ← meta-learner disabled
-    )
+    meta_off = MetaLearner(detector=detector2, enabled=False)
 
     correct2 = 0
     for i, true_regime in enumerate(fast_sequence):
