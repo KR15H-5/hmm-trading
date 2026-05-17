@@ -61,7 +61,6 @@ class HMMDetector:
         self.model = None
         self.state_to_regime = {}
         self.observation_history = []
-        self.prediction_history = []
         self.alpha = None
 
     def add_observation(self, features):
@@ -143,8 +142,6 @@ class HMMDetector:
             regime: float(self.alpha[state])
             for state, regime in self.state_to_regime.items()
         }
-
-        self.prediction_history.append(predicted_regime)
 
         return {
             'regime': predicted_regime,

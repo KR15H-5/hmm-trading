@@ -66,9 +66,6 @@ class MetaLearner:
 
         return retrained
 
-    def current_error_rate(self):
-        return self.compute_error_rate()
-
     def n_retrains(self):
         return len(self.retrain_log)
 

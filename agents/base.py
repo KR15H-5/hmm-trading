@@ -25,17 +25,10 @@ class BaseAgent(BSE.Trader):
         else:
             mid = None
 
-        recent_trades = [
-            event['price']
-            for event in lob['tape']
-            if event['type'] == 'Trade'
-        ]
-
         return {
             'best_bid': best_bid,
             'best_ask': best_ask,
             'mid': mid,
-            'recent_trades': recent_trades,
         }
 
     def update_pnl(self, trade, my_tid):
