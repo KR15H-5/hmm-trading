@@ -63,7 +63,7 @@ def run_single_trial(args):
     )
     coord.run()
     summary = coord.summary()
-    detection_lag = _compute_detection_lag(coord.results)
+    detection_lag = compute_detection_lag(coord.results)
     per_trans_lag = summary.get('per_transition_lag', {})
 
     return {
@@ -97,7 +97,7 @@ def run_single_trial(args):
     }
 
 
-def _compute_detection_lag(results):
+def compute_detection_lag(results):
     live = [r for r in results if r['veto_reason'] != 'warmup']
     if len(live) < 2:
         return 0.0

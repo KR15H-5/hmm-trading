@@ -9,14 +9,12 @@ from agents.base import BaseAgent
 class MomentumAgent(BaseAgent):
     def __init__(self, tid, balance, params, time):
         super().__init__(tid, balance, params, time)
-
-        self.fast_window   = params.get('fast_window',   3)
-        self.slow_window   = params.get('slow_window',   8)
+        self.fast_window = params.get('fast_window', 3)
+        self.slow_window = params.get('slow_window', 8)
         self.max_inventory = params.get('max_inventory', 5)
-
         self.signal = None
 
-    def _compute_signal(self):
+    def compute_signal(self):
         if len(self.prices_seen) < self.slow_window:
             return None
 
@@ -30,14 +28,10 @@ class MomentumAgent(BaseAgent):
             return 'buy'
         elif fast_ma < slow_ma:
             return 'sell'
-        else:
-            return None
+        return None
 
     def getorder(self, time, countdown, lob):
-        if not self.active:
-            return None
-
-        if self.signal is None:
+        if not self.active or self.signal is None:
             return None
 
         market = self.observe(lob)
@@ -45,14 +39,12 @@ class MomentumAgent(BaseAgent):
         if self.signal == 'buy':
             if self.inventory >= self.max_inventory:
                 return None
-
             if market['best_bid'] is not None:
                 price = market['best_bid'] + 1
             elif market['mid'] is not None:
                 price = int(market['mid'])
             else:
                 return None
-
             order = BSE.Order(self.tid, 'Bid', price, 1, time, lob['QID'])
             self.lastquote = order
             return order
@@ -60,14 +52,12 @@ class MomentumAgent(BaseAgent):
         elif self.signal == 'sell':
             if self.inventory <= -self.max_inventory:
                 return None
-
             if market['best_ask'] is not None:
                 price = market['best_ask'] - 1
             elif market['mid'] is not None:
                 price = int(market['mid'])
             else:
                 return None
-
             order = BSE.Order(self.tid, 'Ask', price, 1, time, lob['QID'])
             self.lastquote = order
             return order
@@ -76,8 +66,6 @@ class MomentumAgent(BaseAgent):
 
     def respond(self, time, lob, trade, vrbs):
         super().respond(time, lob, trade, vrbs)
-
         if trade is not None:
             self.update_pnl(trade, self.tid)
-
-        self.signal = self._compute_signal()
+        self.signal = self.compute_signal()

@@ -7,10 +7,9 @@ import BSE
 class BaseAgent(BSE.Trader):
     def __init__(self, tid, balance, params, time):
         super().__init__(self.__class__.__name__, tid, balance, params, time)
-
-        self.inventory   = 0
-        self.pnl         = 0.0
-        self.active      = True
+        self.inventory = 0
+        self.pnl = 0.0
+        self.active = True
         self.prices_seen = []
 
     def observe(self, lob):
@@ -33,9 +32,9 @@ class BaseAgent(BSE.Trader):
         ]
 
         return {
-            'best_bid':      best_bid,
-            'best_ask':      best_ask,
-            'mid':           mid,
+            'best_bid': best_bid,
+            'best_ask': best_ask,
+            'mid': mid,
             'recent_trades': recent_trades,
         }
 
@@ -48,10 +47,10 @@ class BaseAgent(BSE.Trader):
         if trade['party1'] == my_tid or trade['party2'] == my_tid:
             if self.orders and self.orders[0].otype == 'Bid':
                 self.inventory += 1
-                self.pnl       -= price
+                self.pnl -= price
             else:
                 self.inventory -= 1
-                self.pnl       += price
+                self.pnl += price
 
     def bookkeep(self, time, trade, order, vrbs):
         self.blotter.append(trade)
@@ -62,25 +61,25 @@ class BaseAgent(BSE.Trader):
         if trade.get('party1') == self.tid:
             if self.lastquote is not None and self.lastquote.otype == 'Bid':
                 self.inventory += 1
-                self.pnl       -= price
-                self.balance   -= price
+                self.pnl -= price
+                self.balance -= price
             else:
                 self.inventory -= 1
-                self.pnl       += price
-                self.balance   += price
+                self.pnl += price
+                self.balance += price
 
         elif trade.get('party2') == self.tid:
             if self.lastquote is not None and self.lastquote.otype == 'Bid':
                 self.inventory += 1
-                self.pnl       -= price
-                self.balance   -= price
+                self.pnl -= price
+                self.balance -= price
             else:
                 self.inventory -= 1
-                self.pnl       += price
-                self.balance   += price
+                self.pnl += price
+                self.balance += price
 
         self.n_trades += 1
-        self.orders   = []
+        self.orders = []
         self.n_quotes = 0
 
     def getorder(self, time, countdown, lob):
